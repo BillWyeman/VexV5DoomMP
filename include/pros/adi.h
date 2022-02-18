@@ -8,7 +8,7 @@
  * This file should not be modified by users, since it gets replaced whenever
  * a kernel upgrade occurs.
  *
- * Copyright (c) 2017-2018, Purdue University ACM SIGBots.
+ * Copyright (c) 2017-2021, Purdue University ACM SIGBots.
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -18,6 +18,7 @@
 #ifndef _PROS_ADI_H_
 #define _PROS_ADI_H_
 
+#include <stdbool.h>
 #include <stdint.h>
 #ifndef PROS_ERR
 #define PROS_ERR (INT32_MAX)
@@ -37,8 +38,13 @@ typedef enum adi_port_config_e {
 	E_ADI_DIGITAL_IN = 2,
 	E_ADI_DIGITAL_OUT = 3,
 
+#ifdef _INTELLISENSE
+#define _DEPRECATE_DIGITAL_IN = E_ADI_DIGITAL_IN
+#define _DEPRECATE_ANALOG_IN = E_ADI_ANALOG_IN
+#else
 #define _DEPRECATE_DIGITAL_IN __attribute__((deprecated("use E_ADI_DIGITAL_IN instead"))) = E_ADI_DIGITAL_IN
 #define _DEPRECATE_ANALOG_IN __attribute__((deprecated("use E_ADI_ANALOG_IN instead"))) = E_ADI_ANALOG_IN
+#endif
 
 	E_ADI_SMART_BUTTON _DEPRECATE_DIGITAL_IN,
 	E_ADI_SMART_POT _DEPRECATE_ANALOG_IN,
@@ -105,6 +111,7 @@ typedef enum adi_port_config_e {
 #endif
 #endif
 
+#define INTERNAL_ADI_PORT 22
 #define NUM_ADI_PORTS 8
 
 #ifdef __cplusplus
@@ -122,8 +129,7 @@ namespace c {
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports.
  *
  * \param port
  *        The ADI port number (from 1-8, 'a'-'h', 'A'-'H') for which to return
@@ -138,8 +144,7 @@ adi_port_config_e_t adi_port_get_config(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports.
  *
  * \param port
  *        The ADI port number (from 1-8, 'a'-'h', 'A'-'H') for which the value
@@ -154,8 +159,7 @@ int32_t adi_port_get_value(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports.
  *
  * \param port
  *        The ADI port number (from 1-8, 'a'-'h', 'A'-'H') to configure
@@ -175,8 +179,7 @@ int32_t adi_port_set_config(uint8_t port, adi_port_config_e_t type);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO  - The given value is not within the range of ADI Ports.
  *
  * \param port
  *        The ADI port number (from 1-8, 'a'-'h', 'A'-'H') for which the value
@@ -243,9 +246,7 @@ int32_t adi_port_set_value(uint8_t port, int32_t value);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an analog input.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
  *
  * \param port
  *        The ADI port to calibrate (from 1-8, 'a'-'h', 'A'-'H')
@@ -262,9 +263,8 @@ int32_t adi_analog_calibrate(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an analog input.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an analog input
  *
  * \param port
  *        The ADI port (from 1-8, 'a'-'h', 'A'-'H') for which the value will be
@@ -285,9 +285,8 @@ int32_t adi_analog_read(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an analog input.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an analog input
  *
  * \param port
  *        The ADI port (from 1-8, 'a'-'h', 'A'-'H') for which the value will be
@@ -313,9 +312,8 @@ int32_t adi_analog_read_calibrated(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an analog input.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an analog input
  *
  * \param port
  *        The ADI port (from 1-8, 'a'-'h', 'A'-'H') for which the value will be
@@ -330,15 +328,14 @@ int32_t adi_analog_read_calibrated_HR(uint8_t port);
  * Gets the digital value (1 or 0) of a port configured as a digital input.
  *
  * If the port is configured as some other mode, the digital value which
- * reflects the current state of the poprt is returned, which may or may not
+ * reflects the current state of the port is returned, which may or may not
  * differ from the currently set value. The return value is undefined for ports
  * configured as any mode other than a Digital Input.
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as a digital input.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as a digital input
  *
  * \param port
  *        The ADI port to read (from 1-8, 'a'-'h', 'A'-'H')
@@ -360,9 +357,8 @@ int32_t adi_digital_read(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as a digital input.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as a digital input
  *
  * \param port
  *        The ADI port to read (from 1-8, 'a'-'h', 'A'-'H')
@@ -379,9 +375,8 @@ int32_t adi_digital_get_new_press(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as a digital output.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as a digital output
  *
  * \param port
  *        The ADI port to read (from 1-8, 'a'-'h', 'A'-'H')
@@ -392,15 +387,14 @@ int32_t adi_digital_get_new_press(uint8_t port);
  * \return 1 if the operation was successful or PROS_ERR if the operation
  * failed, setting errno.
  */
-int32_t adi_digital_write(uint8_t port, const bool value);
+int32_t adi_digital_write(uint8_t port, bool value);
 
 /**
  * Configures the port as an input or output with a variety of settings.
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
  *
  * \param port
  *        The ADI port to read (from 1-8, 'a'-'h', 'A'-'H')
@@ -417,9 +411,8 @@ int32_t adi_pin_mode(uint8_t port, uint8_t mode);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Motor.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an motor
  *
  * \param port
  *        The ADI port to set (from 1-8, 'a'-'h', 'A'-'H')
@@ -437,9 +430,8 @@ int32_t adi_motor_set(uint8_t port, int8_t speed);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Motor.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an motor
  *
  * \param port
  *        The ADI port to get (from 1-8, 'a'-'h', 'A'-'H')
@@ -453,9 +445,8 @@ int32_t adi_motor_get(uint8_t port);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Motor.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an motor
  *
  * \param port
  *        The ADI port to set (from 1-8, 'a'-'h', 'A'-'H')
@@ -480,9 +471,9 @@ typedef int32_t adi_encoder_t;
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Encoder.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an encoder
+
  *
  * \param enc
  *        The adi_encoder_t object from adi_encoder_init() to read
@@ -497,13 +488,13 @@ int32_t adi_encoder_get(adi_encoder_t enc);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Encoder.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an encoder
+
  *
  * \param port_top
  *        The "top" wire from the encoder sensor with the removable cover side
- *        UP
+ *        up. This should be in port 1, 3, 5, or 7 ('A', 'C', 'E', or 'G').
  * \param port_bottom
  *        The "bottom" wire from the encoder sensor
  * \param reverse
@@ -512,7 +503,7 @@ int32_t adi_encoder_get(adi_encoder_t enc);
  * \return An adi_encoder_t object to be stored and used for later calls to
  * encoder functions
  */
-adi_encoder_t adi_encoder_init(uint8_t port_top, uint8_t port_bottom, const bool reverse);
+adi_encoder_t adi_encoder_init(uint8_t port_top, uint8_t port_bottom, bool reverse);
 
 /**
  * Sets the encoder value to zero.
@@ -522,9 +513,9 @@ adi_encoder_t adi_encoder_init(uint8_t port_top, uint8_t port_bottom, const bool
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Encoder.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an encoder
+
  *
  * \param enc
  *        The adi_encoder_t object from adi_encoder_init() to reset
@@ -539,9 +530,8 @@ int32_t adi_encoder_reset(adi_encoder_t enc);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Encoder.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an encoder
  *
  * \param enc
  *        The adi_encoder_t object from adi_encoder_init() to stop
@@ -568,9 +558,8 @@ typedef int32_t adi_ultrasonic_t;
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Ultrasonic.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an ultrasonic
  *
  * \param ult
  *        The adi_ultrasonic_t object from adi_ultrasonic_init() to read
@@ -585,16 +574,15 @@ int32_t adi_ultrasonic_get(adi_ultrasonic_t ult);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Ultrasonic.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an ultrasonic
  *
  * \param port_ping
- *        The port connected to the orange OUTPUT cable. This should be in the
- *        next highest port following port_echo.
- * \param port_echo
- *        The port connected to the yellow INPUT cable. This should be in port
+ *        The port connected to the orange OUTPUT cable. This should be in port
  *        1, 3, 5, or 7 ('A', 'C', 'E', 'G').
+ * \param port_echo
+ *        The port connected to the yellow INPUT cable. This should be in the
+ *        next highest port following port_ping.
  *
  * \return An adi_ultrasonic_t object to be stored and used for later calls to
  * ultrasonic functions
@@ -606,9 +594,8 @@ adi_ultrasonic_t adi_ultrasonic_init(uint8_t port_ping, uint8_t port_echo);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Ultrasonic.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as an ultrasonic
  *
  * \param ult
  *        The adi_ultrasonic_t object from adi_ultrasonic_init() to stop
@@ -636,9 +623,8 @@ typedef int32_t adi_gyro_t;
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Gyro.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as a gyro
  *
  * \param gyro
  *        The adi_gyro_t object for which the angle will be returned
@@ -657,8 +643,8 @@ double adi_gyro_get(adi_gyro_t gyro);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as a gyro
  *
  * \param port
  *        The ADI port to initialize as a gyro (from 1-8, 'a'-'h', 'A'-'H')
@@ -676,9 +662,8 @@ adi_gyro_t adi_gyro_init(uint8_t port, double multiplier);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Gyro.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as a gyro
  *
  * \param gyro
  *        The adi_gyro_t object for which the angle will be returned
@@ -693,9 +678,8 @@ int32_t adi_gyro_reset(adi_gyro_t gyro);
  *
  * This function uses the following values of errno when an error state is
  * reached:
- * EINVAL - The given value is not within the range of ADI Ports, or the given
- * port is not configured as an ADI Gyro.
- * EACCES - Another resource is currently trying to access the ADI.
+ * ENXIO - The given value is not within the range of ADI Ports
+ * EADDRINUSE - The port is not configured as a gyro
  *
  * \param gyro
  *        The adi_gyro_t object to be shut down
