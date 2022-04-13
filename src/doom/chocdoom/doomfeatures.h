@@ -35,6 +35,9 @@
 
 #undef FEATURE_SOUND
 
+// enables packaging wad with the binary
+#undef BUNDLE_WAD
+
 #endif /* #ifndef DOOM_FEATURES_H */
 
 

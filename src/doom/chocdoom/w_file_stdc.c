@@ -22,6 +22,7 @@
 #include "w_file.h"
 #include "z_zone.h"
 #include "i_system.h"
+#include "doomfeatures.h"
 
 typedef struct
 {
@@ -31,12 +32,20 @@ typedef struct
 
 extern wad_file_class_t stdc_wad_file;
 
+extern char _binary_doom1_wad_start[];
+extern char _binary_doom1_wad_end[];
+extern uint32_t _binary_doom1_wad_size;
+
 static wad_file_t *W_StdC_OpenFile(char *path)
 {
     stdc_wad_file_t *result;
     FILE *fstream;
 
+    #ifdef BUNDLE_WAD 
+    fstream = fmemopen(_binary_doom1_wad_start, _binary_doom1_wad_size, "rb");
+    #else
     fstream = fopen(path, "rb");
+    #endif
 
     if (fstream == NULL)
     {

@@ -10,7 +10,7 @@ extern void D_DoomMain(void);
 
 
 char *client_argvs[] = {
-	"fghfgh.exe",
+	"bbbb.exe",
 	"-connect",
 	"1.2.3.4",
 	"sfsdf",
@@ -18,15 +18,23 @@ char *client_argvs[] = {
 };
 	
 char *server_argvs[] = {
-	"fghfgh.exe",
-	"-deathmatch",
+	"bbbb.exe",
+	"-altdeath",
 	"-server",
 	"-privateserver",
 	NULL
 };
 
+char *sp_argvs[] = {
+	"bbbb.exe",
+	"bbbb",
+	"bbbb",
+	"bbbb",
+	NULL
+};
+
 int		myargc = 4;
-char**	myargv = client_argvs;
+char**	myargv = sp_argvs;
 
 uint8_t DOOM_VEXlink_port = 20;
 

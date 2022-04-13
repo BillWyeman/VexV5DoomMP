@@ -142,8 +142,10 @@ CSRC=$(foreach cext,$(CEXTS),$(call rwildcard, $(SRCDIR),*.$(cext), $1))
 COBJ=$(addprefix $(BINDIR)/,$(patsubst $(SRCDIR)/%,%.o,$(call CSRC, $1)))
 CXXSRC=$(foreach cxxext,$(CXXEXTS),$(call rwildcard, $(SRCDIR),*.$(cxxext), $1))
 CXXOBJ=$(addprefix $(BINDIR)/,$(patsubst $(SRCDIR)/%,%.o,$(call CXXSRC,$1)))
+WADSRC=$(foreach wadext,$(WADEXTS),$(call wildcard, *.$(wadext), $1))
+WADOBJ=$(addprefix $(BINDIR)/,$(patsubst %,%.o,$(call WADSRC,$1)))
 
-GETALLOBJ=$(sort $(call ASMOBJ,$1) $(call COBJ,$1) $(call CXXOBJ,$1))
+GETALLOBJ=$(sort $(call ASMOBJ,$1) $(call COBJ,$1) $(call CXXOBJ,$1) $(call WADOBJ,$1))
 
 ARCHIVE_TEXT_LIST=$(subst $(SPACE),$(COMMA),$(notdir $(basename $(LIBRARIES))))
 
@@ -266,6 +268,17 @@ $(BINDIR)/%.$1.o: $(SRCDIR)/%.$1 $(DEPDIR)/$(basename %).d
 	$(RENAMEDEPENDENCYFILE)
 endef
 $(foreach cxxext,$(CXXEXTS),$(eval $(call cxx_rule,$(cxxext))))
+
+define wad_rule
+$(BINDIR)/%.$1.o: $(ROOT)/%.$1
+$(BINDIR)/%.$1.o: $(ROOT)/%.$1 $(DEPDIR)/$(basename %).d
+	$(VV)mkdir -p $$(dir $$@)
+	$(MAKEDEPFOLDER)
+	$$(call test_output_2,Compiled $$< ,$(ARCHTUPLE)ld -r -b binary -o $$@ $$<,$(OK_STRING))
+	$(RENAMEDEPENDENCYFILE)
+endef
+$(foreach wadext,$(WADEXTS),$(eval $(call wad_rule,$(wadext))))
+
 
 define _pros_ld_timestamp
 $(VV)mkdir -p $(dir $(LDTIMEOBJ))

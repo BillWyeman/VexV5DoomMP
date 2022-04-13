@@ -4,6 +4,7 @@
 CEXTS:=c
 ASMEXTS:=s S
 CXXEXTS:=cpp c++ cc
+WADEXTS:=wad
 
 # probably shouldn't modify these, but you may need them below
 ROOT=.
