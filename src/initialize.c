@@ -8,7 +8,37 @@
  */
 extern void D_DoomMain(void);
 
+
+char *client_argvs[] = {
+	"fghfgh.exe",
+	"-connect",
+	"1.2.3.4",
+	"sfsdf",
+	NULL
+};
+
+char *server_argvs[] = {
+	"fghfgh.exe",
+	"-deathmatch",
+	"-server",
+	"-privateserver",
+	NULL
+};
+
+int		myargc = 4;
+char**	myargv = server_argvs;
+
+uint8_t DOOM_VEXlink_port = 20;
+
 void initialize() {
+	/*
+	delay(50);
+	link_init_override(20, "DOOM", E_LINK_TRANSMITTER);
+
+	while (!link_connected(20)) {
+      delay(20);
+    }
+    */
     printf("Starting DOOM\n");
     //task_set_priority(CURRENT_TASK, TASK_PRIORITY_MAX);
     D_DoomMain();

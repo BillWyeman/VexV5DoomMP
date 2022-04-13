@@ -1214,8 +1214,8 @@ void D_DoomMain (void)
     //
 
     if (M_CheckParm ("-deathmatch"))
-	deathmatch = 1;
-
+	   deathmatch = 1;
+    //deathmatch = 1;
     //!
     // @category net
     // @vanilla
@@ -1225,8 +1225,8 @@ void D_DoomMain (void)
     //
 
     if (M_CheckParm ("-altdeath"))
-	deathmatch = 2;
-
+	   deathmatch = 2;
+    
     if (devparm)
 	DEH_printf(D_DEVSTR);
     
@@ -1376,7 +1376,7 @@ void D_DoomMain (void)
     }
 
     if (p)
-    {
+    {  
         // With Vanilla you have to specify the file without extension,
         // but make that optional.
         if (M_StringEndsWith(myargv[p + 1], ".lmp"))
@@ -1470,13 +1470,15 @@ void D_DoomMain (void)
 
     DEH_printf("I_Init: Setting up machine state.\n");
     I_CheckIsScreensaver();
+
     I_InitTimer();
     //I_InitJoystick();
     I_InitSound(true);
     I_InitMusic();
 
-    // Initial netgame startup. Connect to server etc.
+    // Initial netgame startup. Connect to server etc.#
     D_ConnectNetGame();
+
 
     // get skill / episode / map from parms
     startskill = sk_medium;

@@ -310,7 +310,7 @@ void D_StartGameLoop(void)
 //
 // Block until the game start message is received from the server.
 //
-/*
+
 static void BlockUntilStart(net_gamesettings_t *settings,
                             netgame_startup_callback_t callback)
 {
@@ -333,12 +333,12 @@ static void BlockUntilStart(net_gamesettings_t *settings,
         I_Sleep(100);
     }
 }
-*/
+
 
 void D_StartNetGame(net_gamesettings_t *settings,
                     netgame_startup_callback_t callback)
 {
-    /*
+    
     int i;
 
     offsetms = 0;
@@ -434,7 +434,7 @@ void D_StartNetGame(net_gamesettings_t *settings,
     //{
     //    printf("Syncing netgames like Vanilla Doom.\n");
     //}
-    */
+    
     settings->consoleplayer = 0;
 	settings->num_players = 1;
 	settings->player_classes[0] = player_class;
@@ -455,7 +455,7 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 #endif
 
     // Call D_QuitNetGame on exit:
-
+    
     I_AtExit(D_QuitNetGame, true);
 
     player_class = connect_data->player_class;
@@ -467,7 +467,6 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
     //
     // Start a multiplayer server, listening for connections.
     //
-
     if (M_CheckParm("-server") > 0
      || M_CheckParm("-privateserver") > 0)
     {
@@ -514,11 +513,12 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
         {
             net_sdl_module.InitClient();
             addr = net_sdl_module.ResolveAddress(myargv[i+1]);
-
+            
             if (addr == NULL)
             {
                 I_Error("Unable to resolve '%s'\n", myargv[i+1]);
             }
+            
         }
     }
 
@@ -537,8 +537,10 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 
         printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
 
+        i = M_CheckParmWithArgs("-connect", 1);
+        //if (i > 0)
+        NET_CL_LaunchGame();
         // Wait for launch message received from server.
-
         NET_WaitForLaunch();
 
         result = true;

@@ -26,9 +26,20 @@
 #include "m_misc.h"
 #include "m_argv.h"  // haleyjd 20110212: warning fix
 
-int		myargc;
-char**		myargv;
+/*
+char *argvs[] = {
+	"fghfgh.exe",
+	"-server",
+	"-deathmatch",
+	"sfsdf",
+	NULL
+};
 
+int		myargc = 4;
+char**		myargv = argvs;
+*/
+extern int myargc;
+extern char** myargv;
 
 
 

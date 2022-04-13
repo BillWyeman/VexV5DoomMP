@@ -52,6 +52,8 @@
 #define PACKEDATTR
 #endif
 
+#define PRINTF_ATTR(fmt, first) __attribute__((format(printf, fmt, first)))
+
 // C99 integer types; with gcc we just use this.  Other compilers 
 // should add conditional statements that define the C99 types.
 
