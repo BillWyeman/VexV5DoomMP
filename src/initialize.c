@@ -16,7 +16,7 @@ char *client_argvs[] = {
 	"sfsdf",
 	NULL
 };
-
+	
 char *server_argvs[] = {
 	"fghfgh.exe",
 	"-deathmatch",
@@ -26,7 +26,7 @@ char *server_argvs[] = {
 };
 
 int		myargc = 4;
-char**	myargv = server_argvs;
+char**	myargv = client_argvs;
 
 uint8_t DOOM_VEXlink_port = 20;
 
