@@ -524,22 +524,25 @@ boolean D_InitNetGame(net_connect_data_t *connect_data)
 
     if (addr != NULL)
     {
+        NET_CL_Init();
         if (M_CheckParm("-drone") > 0)
         {
             connect_data->drone = true;
         }
-
+        
         if (!NET_CL_Connect(addr, connect_data))
         {
             I_Error("D_InitNetGame: Failed to connect to %s\n",
                     NET_AddrToString(addr));
         }
+        
+        //NET_CL_Connect(addr, connect_data);
 
         printf("D_InitNetGame: Connected to %s\n", NET_AddrToString(addr));
 
         i = M_CheckParmWithArgs("-connect", 1);
         //if (i > 0)
-        NET_CL_LaunchGame();
+        //    NET_CL_LaunchGame();
         // Wait for launch message received from server.
         NET_WaitForLaunch();
 

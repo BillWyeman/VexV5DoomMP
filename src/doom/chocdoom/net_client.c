@@ -129,7 +129,7 @@ boolean net_waiting_for_launch = false;
 
 // Name that we send to the server
 
-char *net_player_name = "Player";
+char *net_player_name = NULL;
 
 // Connected but not participating in the game (observer)
 
@@ -1106,14 +1106,14 @@ boolean NET_CL_Connect(net_addr_t *addr, net_connect_data_t *data)
             last_send_time = nowtime;
         }
 
-        // time out after 5 seconds
-        if (nowtime - start_time > 5000)
+        // time out after 50 seconds
+        if (nowtime - start_time > 50000)
         {
             SetRejectReason("No response from server");
             break;
         }
 
-        if (!sent_hole_punch && nowtime - start_time > 2000)
+        if (!sent_hole_punch && nowtime - start_time > 200000)
         {
             NET_Log("client: no response to SYN, requesting hole punch");
             NET_RequestHolePunch(client_context, addr);

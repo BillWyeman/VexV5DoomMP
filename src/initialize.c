@@ -34,9 +34,9 @@ char *sp_argvs[] = {
 };
 
 int		myargc = 4;
-char**	myargv = sp_argvs;
+char**	myargv = server_argvs;
 
-uint8_t DOOM_VEXlink_port = 20;
+uint8_t DOOM_VEXlink_port = 21;
 
 void initialize() {
 	/*

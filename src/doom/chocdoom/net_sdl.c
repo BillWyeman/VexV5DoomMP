@@ -18,6 +18,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include "doomtype.h"
 #include "i_system.h"
@@ -373,7 +374,14 @@ net_addr_t *NET_SDL_ResolveAddress(const char *address)
 */
 // Complete module
 
+#define PROTOCOL_SIZE 4
+#define START_BYTE 0x33
+
 extern uint8_t DOOM_VEXlink_port;
+
+net_addr_t vexlink_addr = {
+    &net_sdl_module, 0, 0
+};
 
 static boolean NET_SDL_InitClient(void)
 {
@@ -424,52 +432,117 @@ static void NET_SDL_SendPacket(net_addr_t *addr, net_packet_t *packet)
     }
     */
     
-    int res = link_transmit(DOOM_VEXlink_port, (void*)packet->data, (uint16_t) packet->len);
-    if ( res != 1)
+    //int res = link_transmit(DOOM_VEXlink_port, (void*)packet->data, (uint16_t) packet->len);
+    uint8_t checksum = START_BYTE;
+    uint8_t size_tx_buf[2];
+    size_tx_buf[1] = (packet->len >> 8) & 0xff;
+    size_tx_buf[0] = (packet->len) & 0xff;
+    checksum ^= size_tx_buf[1];
+    checksum ^= size_tx_buf[0];
+    
+    for(int i = 0; i < packet->len; i++) {
+        checksum ^= ((uint8_t*)packet->data)[i];
+    }
+    uint32_t rtv = 0;
+    // send protocol
+    int start_byte = START_BYTE;
+    link_transmit_raw(DOOM_VEXlink_port, (void*)&start_byte, 1);
+    link_transmit_raw(DOOM_VEXlink_port, size_tx_buf, 2);
+    link_transmit_raw(DOOM_VEXlink_port, (void*)packet->data, packet->len);
+    link_transmit_raw(DOOM_VEXlink_port, &checksum, 1);
+
+    /*
+    printf("\nsending %i: ", packet->len);
+    for (int i = 0; i < packet->len; i++)
+            printf("%X ", packet->data[i]);
+    printf("\n");
+    */
+    /*
+    if ( res == PROS_ERR)
     {
         return;
         //I_Error("NET_SDL_SendPacket: Error transmitting packet: %d",
         //        res);
     }
+    */
     
 }
 
+#define BUFFER_SIZE 300
+char data_buffer[BUFFER_SIZE];
+
+int buffer_tail = 0;
+
 static boolean NET_SDL_RecvPacket(net_addr_t **addr, net_packet_t **packet)
 {
+    uint32_t raw_size = link_raw_receivable_size(DOOM_VEXlink_port);
+    if (raw_size == 0)
+        return false;
+
+    link_receive_raw(DOOM_VEXlink_port, (void*) (&data_buffer)+buffer_tail, raw_size);
+    buffer_tail+= raw_size;
 
     /*
-    if (queue_get_waiting(loopback_buffer) > 0){
-        queue_recv(loopback_buffer, *packet, 0);
+    printf("\n");
+    for(int i = 0; i < buffer_tail; i++) {
+        printf("%X ", data_buffer[i]);
     }
-    else{
-        */
-    size_t size = 1500;
-    char data[1500];
-    
-    int result = link_receive(DOOM_VEXlink_port, (void*) &data, size);
+    printf("recieved %i raw bytes\n", raw_size);
+    */
 
-    if (result != 1)
-    {
-        //TODO:
-        //I_Error("NET_SDL_RecvPacket: Error receiving packet: %d",
-        //        result);
+    if (buffer_tail < 3)
+        return false;
+
+    int buffer_head = 0;
+    for (buffer_head = 0; buffer_head<BUFFER_SIZE;buffer_head++){
+        if (data_buffer[buffer_head] == START_BYTE)
+            break;
+    }
+    if (buffer_tail - buffer_head < 2)
+        return false;
+
+    uint16_t received_data_size = data_buffer[buffer_head+1] + (data_buffer[buffer_head+2] << 8);
+
+    if (buffer_tail - buffer_head < received_data_size+3)
+        return false;
+
+    char data[300];
+    memcpy(data, data_buffer + buffer_head+3, received_data_size);
+
+    uint8_t received_checksum = data_buffer[buffer_head+received_data_size+3];
+
+    uint8_t calculated_checksum = START_BYTE;
+    calculated_checksum ^= (received_data_size >> 8) & 0xff;
+    calculated_checksum ^= (received_data_size) & 0xff;
+    for(int i = 0; i < received_data_size; i++) {
+        calculated_checksum ^= ((uint8_t*)data)[i];
+    }
+
+    if(calculated_checksum != received_checksum ) {
         return false;
     }
 
-    // no packets received
+    /*
+    printf("\nrecvd %i: \n", received_data_size);
 
-    if (result == 0)
-        return false;
-
-    size = result;
+    for(int i = 0; i < received_data_size; i++) {
+        printf("%X ", data[i]);
+    }
+    */
 
     // Put the data into a new packet structure
-    *packet = NET_NewPacket(size);
-    memcpy((*packet)->data, data, size);
-    (*packet)->len = size;
+    *packet = NET_NewPacket(received_data_size);
+    memcpy((*packet)->data, data, received_data_size);
+    (*packet)->len = received_data_size;
     //}
-    
+
+    // move all the stuff after this packet to the start
+    memcpy(data_buffer, data_buffer+buffer_head+received_data_size+4, BUFFER_SIZE-(buffer_head+received_data_size+4));
+    *addr = &vexlink_addr;
+    buffer_tail -= buffer_head+received_data_size+4;
     return true;
+
+
 }
 
 void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len){
@@ -480,9 +553,6 @@ void NET_SDL_AddrToString(net_addr_t *addr, char *buffer, int buffer_len){
 
 static void NET_SDL_FreeAddress(net_addr_t *addr){};
 
-static net_addr_t vexlink_addr = {
-    &net_sdl_module, 0, 0
-};
 
 net_addr_t *NET_SDL_ResolveAddress(const char *address){
     return &vexlink_addr;

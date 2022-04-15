@@ -18,14 +18,19 @@ EXTRA_CFLAGS=-Wfatal-errors
 EXTRA_CXXFLAGS=
 
 # Set to 1 to enable hot/cold linking
-USE_PACKAGE:=0
+USE_PACKAGE:=1
 
 # Set this to 1 to add additional rules to compile your project as a PROS library template
-IS_LIBRARY:=0
+IS_LIBRARY:=1
 # TODO: CHANGE THIS!
 LIBNAME:=libbest
 VERSION:=1.0.0
-# EXCLUDE_SRC_FROM_LIB= $(SRCDIR)/unpublishedfile.c
+EXCLUDE_SRC_FROM_LIB=$(wildcard ./src/*.cpp)
+EXCLUDE_SRC_FROM_LIB+=$(wildcard ./src/*.c)
+EXCLUDE_SRC_FROM_LIB+=$(wildcard ./src/doom/*.c)
+EXCLUDE_SRC_FROM_LIB+=$(wildcard ./src/doom/*.h)
+EXCLUDE_SRC_FROM_LIB+=$(wildcard ./src/doom/chocdoom/*.c)
+EXCLUDE_SRC_FROM_LIB+=$(wildcard ./src/doom/chocdoom/*.h)
 # this line excludes opcontrol.c and similar files
 EXCLUDE_SRC_FROM_LIB+=$(foreach file, $(SRCDIR)/opcontrol $(SRCDIR)/initialize $(SRCDIR)/autonomous,$(foreach cext,$(CEXTS),$(file).$(cext)) $(foreach cxxext,$(CXXEXTS),$(file).$(cxxext)))
 

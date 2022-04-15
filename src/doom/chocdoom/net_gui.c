@@ -49,7 +49,7 @@ static void EscapePressed(void *widget, void *unused)
     I_Quit();
 }
 
-static void StartGame()
+static void StartGame(void *widget, void *unused)
 {
     NET_CL_LaunchGame();
 }
@@ -386,6 +386,9 @@ static void CheckAutoLaunch(void)
 {
     int nodes;
 
+    if (net_client_wait_data.num_players >= 2)
+        StartGame(NULL, NULL);
+
     if (net_client_received_wait_data
      && net_client_wait_data.is_controller
      && expected_nodes > 0)
@@ -393,6 +396,7 @@ static void CheckAutoLaunch(void)
         nodes = net_client_wait_data.num_players
               + net_client_wait_data.num_drones;
 
+        expected_nodes = 2;
         if (nodes >= expected_nodes)
         {
             StartGame(NULL, NULL);
